@@ -1,73 +1,71 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+Devcamp - second week project
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 목적
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- 예시코드를 보며 결제 관련 비즈니스 로직을 습득
+- 직접 PG사 연결
+- 정액제, 정률제 쿠폰 적용
+- 토큰 블랙리스트 방식 적용
 
-## Description
+## 구현 기능
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- 로그인
+- 회원가입
+- 로그아웃
+- JWT 토큰 인증, 인가
+- JWT 토큰 블랙리스트 추가
+- PG사 결제 연동
+- 쿠폰 적용가 결제
 
-## Installation
+## 구상 로직
 
-```bash
-$ npm install
-```
+- 회원가입시 30% 할인 쿠폰과 5000원 할인 쿠폰을 지급
+- 특정 물건 구입시 원하는 쿠폰을 선택
+- 해당 쿠폰에 따라 가격을 조정 후 결제
+- Admin은 물건을 사고 팔 수 있다.
 
-## Running the app
+## 최초 로그인
 
-```bash
-# development
-$ npm run start
+- 로그인 요청
+- access token, refresh token 생성 및 반환, refresh token redis에 저장
+- access token 세션 스토리지, refresh token 쿠키에 저장
 
-# watch mode
-$ npm run start:dev
+## 클라이언트 요청시
 
-# production mode
-$ npm run start:prod
-```
+- access token 유효기간 확인
+- 유효 토큰: header에 담아 요청보냄
+- 유효하지 않은 토큰: refresh token header에 담아 acces token 재발급 요청한다.(refresh - 유효하면 access token 재발급, 재저장 후 요청 다시 보내기)
 
-## Test
+## #로그아웃
 
-```bash
-# unit tests
-$ npm run test
+- 로그아웃 요청
+- 세션에 있는 access token 삭제
+- redis 저장된 refresh 삭제, 해당 access token을 redis black list에 추가(이때 access - token의 남은 유효 기간만큼 설정하여 저장해준다.)
+- 사용자가 서비스 사용을 끝냈지만, 아직 유효기간이 끝나지않은 토큰을 Redis의 블랙리스트에 - - 저장하고, 모든 클라이언트 요청이 들어올 때 Redis의 블랙리스트를 조회한다.
+- 블랙리스트에 존재하는 토큰으로 인증 시도시 거부
 
-# e2e tests
-$ npm run test:e2e
+## Coupon 구상 로직
 
-# test coverage
-$ npm run test:cov
-```
+- 회원가입시 해당 유저에게 30% 할인 쿠폰과 5000원 할인 쿠폰 지급
 
-## Support
+## 구상 DB
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- 회원
 
-## Stay in touch
+id, userName, password, phone, role(Admin | user), couponId(FK)
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 상품
 
-## License
+id, productName, price, isSoldOut, userId(FK), createdAt, updatedAt
 
-Nest is [MIT licensed](LICENSE).
+## 쿠폰
+
+id, couponName, applyPrice, applyPercentage, expiredAt, couponType(price | percent), userId(PK)
+
+## 결제
+
+id, total_price, userId(FK), productId(FK), createdAt, isAccept
+
+## 기술 스택
+
+Typescript, Nest.js, PostgreSQL, TypeORM

@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../services';
-import { CreateUserDto, SignupResDto } from '../dto';
+import { CreateUserDto, LoginReqDto, LoginResDto, SignupResDto } from '../dto';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -9,6 +10,31 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly userService: UserService,
   ) {}
+
+  @Post('login')
+  async login(
+    @Req() req,
+    @Body() loginReqDto: LoginReqDto,
+  ): Promise<LoginResDto> {
+    const { ip, method, originalUrl } = req;
+    const reqInfo = {
+      ip,
+      endpoint: `${method} ${originalUrl}`,
+      ua: req.headers['user-agent'] || '',
+    };
+
+    return this.authService.login(
+      loginReqDto.email,
+      loginReqDto.password,
+      reqInfo,
+    );
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req) {
+    console.log(req.headers.authorization);
+  }
 
   @Post('signup')
   async signup(@Body() createUserDto: CreateUserDto): Promise<SignupResDto> {

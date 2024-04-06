@@ -14,6 +14,6 @@ async function bootstrap() {
   const serviceName = configService.get<string>('SERVICE_NAME');
   console.log(`runtime: ${env}\tport: ${port}\tserviceNmae: ${serviceName}`);
 
-  await app.listen(3000);
+  await app.listen(port);
 }
-bootstrap();
+void bootstrap();

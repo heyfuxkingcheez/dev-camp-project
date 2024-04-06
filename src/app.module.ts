@@ -7,10 +7,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validationSchema } from './config/validation.schema';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
-    AuthModule,
     ConfigModule.forRoot({
       envFilePath: `.env`,
       validationSchema,
@@ -36,6 +36,8 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
         return addTransactionalDataSource(new DataSource(options));
       },
     }),
+    RedisModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

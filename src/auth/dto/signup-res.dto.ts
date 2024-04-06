@@ -1,5 +1,5 @@
 export class SignupResDto {
-  id: number;
+  id: string;
   nickName: string;
   email: string;
   password: string;

@@ -1,0 +1,32 @@
+@domain = http://localhost:3030
+@AccessToken = {{loginToken.response.body.$.accessToken}}
+# @AccessToken = '구글 소셜 로그인 테스트 시 이쪽에 토큰 값 이력한 뒤 2번째 줄 주석처리'
+
+###
+# 사용자 회원가입
+POST {{domain}}/auth/signup
+Content-Type: application/json
+
+{
+  "nickName": "woogi",
+  "email": "user1@gmail.com",
+  "password": "12345"
+}
+
+###
+# 로그인
+# @name loginToken
+POST {{domain}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "user1@gmail.com",
+  "password": "12345"
+}
+
+###
+# 로그아웃
+POST  {{domain}}/auth/logout
+Content-Type: application/json
+Authorization: {{AccessToken}}
+
