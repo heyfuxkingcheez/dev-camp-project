@@ -1,8 +1,14 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../services';
-import { CreateUserDto, LoginReqDto, LoginResDto, SignupResDto } from '../dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import {
+  CreateUserDto,
+  LoginReqDto,
+  LoginResDto,
+  RefreshReqDto,
+  SignupResDto,
+} from '../dto';
+import { Public } from '../decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -11,6 +17,7 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
+  @Public()
   @Post('login')
   async login(
     @Req() req,
@@ -31,7 +38,6 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
   async logout(@Req() req) {
     console.log(req.headers.authorization);
     console.log(req.headers.refreshtoken);
@@ -41,6 +47,7 @@ export class AuthController {
     return this.authService.logout(authorization, refreshtoken);
   }
 
+  @Public()
   @Post('signup')
   async signup(@Body() createUserDto: CreateUserDto): Promise<SignupResDto> {
     const user = await this.userService.createUser(createUserDto);
@@ -50,5 +57,10 @@ export class AuthController {
       email: user.email,
       password: user.password,
     };
+  }
+
+  @Post('refresh')
+  async refresh(@Body() dto: RefreshReqDto): Promise<string> {
+    return this.authService.refreshAccessToken(dto.refreshToken);
   }
 }

@@ -8,6 +8,7 @@ import { validationSchema } from './config/validation.schema';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { RedisModule } from './redis/redis.module';
+import { SchedulerModule } from './schedule/schedule.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { RedisModule } from './redis/redis.module';
     }),
     RedisModule,
     AuthModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

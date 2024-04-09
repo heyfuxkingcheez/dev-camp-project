@@ -67,7 +67,7 @@ export class AuthService {
       }),
     ]);
 
-    console.log(access, refresh);
+    // console.log(access, refresh);
     await Promise.all([
       this.tokenBlackListRepository.addTokenToBlackList(
         accessToken,
@@ -84,6 +84,21 @@ export class AuthService {
     ]);
   }
 
+  async refreshAccessToken(refreshToken: string): Promise<string> {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+      });
+
+      const user = await this.userRepository.findOneBy({ id: payload.sub });
+      if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
+
+      return this.createAccessToken(user, payload);
+    } catch (error) {
+      throw new UnauthorizedException('잘못된 접근입니다.');
+    }
+  }
+
   private async validateUser(
     email: string,
     plainPassword: string,
@@ -95,6 +110,12 @@ export class AuthService {
       );
     }
     return user;
+  }
+
+  async isTokenBlackListed(jti: string): Promise<boolean> {
+    const token = await this.tokenBlackListRepository.isTokenBlackListed(jti);
+    if (!token) return false;
+    return true;
   }
 
   createTokenPayload(userId: string): TokenPayload {

@@ -21,6 +21,7 @@ export class TokenBlackListRepository extends Repository<TokenBlackList> {
     expiresAt: number,
   ): Promise<void> {
     console.log(expiresAt);
+
     const blackListedToken = new TokenBlackList();
     blackListedToken.token = token;
     blackListedToken.jti = jti;

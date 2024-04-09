@@ -22,6 +22,8 @@ import {
   RefreshToken,
   TokenBlackList,
 } from './entities';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -58,6 +60,10 @@ import {
     TokenBlackListRepository,
 
     JwtStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
   exports: [
     AuthService,
