@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   AccessLogRepository,
   AccessTokenRepository,
+  TokenBlackListRepository,
   UserRepository,
 } from '../repositories';
 import { LoginResDto } from '../dto';
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly accessTokenRepository: AccessTokenRepository,
     private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly tokenBlackListRepository: TokenBlackListRepository,
   ) {}
 
   async login(
@@ -45,8 +47,8 @@ export class AuthService {
     await this.accessLogRepository.createAccessLog(user, ua, endpoint, ip);
 
     return {
-      accessToken: `Bearer ${accessToken}`,
-      refreshToken: `Bearer ${refreshToken}`,
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         nickName: user.nick_name,
@@ -56,7 +58,7 @@ export class AuthService {
   }
 
   async logout(accessToken: string, refreshToken: string): Promise<void> {
-    const [subAccess, subRefresh] = await Promise.all([
+    const [access, refresh] = await Promise.all([
       this.jwtService.verifyAsync(accessToken, {
         secret: this.configService.get<string>('JWT_SECRET'),
       }),
@@ -65,7 +67,21 @@ export class AuthService {
       }),
     ]);
 
-    console.log(subAccess, subRefresh);
+    console.log(access, refresh);
+    await Promise.all([
+      this.tokenBlackListRepository.addTokenToBlackList(
+        accessToken,
+        access.jti,
+        'access',
+        access.exp,
+      ),
+      this.tokenBlackListRepository.addTokenToBlackList(
+        refreshToken,
+        refresh.jti,
+        'refresh',
+        refresh.exp,
+      ),
+    ]);
   }
 
   private async validateUser(

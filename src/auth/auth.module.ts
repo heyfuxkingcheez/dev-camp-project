@@ -8,11 +8,20 @@ import { User } from './entities/user.entity';
 import { UserService } from './services';
 import { UserRepository } from './repositories/user.repository';
 import { PassportModule } from '@nestjs/passport';
-import { AccessLogRepository, AccessTokenRepository } from './repositories';
+import {
+  AccessLogRepository,
+  AccessTokenRepository,
+  RefreshTokenRepository,
+  TokenBlackListRepository,
+} from './repositories';
 import { RedisModule } from 'src/redis/redis.module';
 import { JwtStrategy } from './strategies';
-import { AccessLog, AccessToken, RefreshToken } from './entities';
-import { RefreshTokenRepository } from './repositories/refresh-token.repository';
+import {
+  AccessLog,
+  AccessToken,
+  RefreshToken,
+  TokenBlackList,
+} from './entities';
 
 @Module({
   imports: [
@@ -28,7 +37,13 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
         },
       }),
     }),
-    TypeOrmModule.forFeature([User, AccessLog, AccessToken, RefreshToken]),
+    TypeOrmModule.forFeature([
+      User,
+      AccessLog,
+      AccessToken,
+      RefreshToken,
+      TokenBlackList,
+    ]),
     RedisModule,
   ],
   controllers: [AuthController],
@@ -40,6 +55,7 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
     AccessLogRepository,
     AccessTokenRepository,
     RefreshTokenRepository,
+    TokenBlackListRepository,
 
     JwtStrategy,
   ],
@@ -51,6 +67,7 @@ import { RefreshTokenRepository } from './repositories/refresh-token.repository'
     AccessLogRepository,
     AccessTokenRepository,
     RefreshTokenRepository,
+    TokenBlackListRepository,
 
     JwtStrategy,
   ],

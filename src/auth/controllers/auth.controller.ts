@@ -34,6 +34,11 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async logout(@Req() req) {
     console.log(req.headers.authorization);
+    console.log(req.headers.refreshtoken);
+
+    const { authorization, refreshtoken } = req.headers;
+
+    return this.authService.logout(authorization, refreshtoken);
   }
 
   @Post('signup')

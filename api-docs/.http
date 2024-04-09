@@ -1,5 +1,6 @@
 @domain = http://localhost:3030
 @AccessToken = {{loginToken.response.body.$.accessToken}}
+@RefreshToken = {{loginToken.response.body.$.refreshToken}}
 # @AccessToken = '구글 소셜 로그인 테스트 시 이쪽에 토큰 값 이력한 뒤 2번째 줄 주석처리'
 
 ###
@@ -29,4 +30,6 @@ Content-Type: application/json
 POST  {{domain}}/auth/logout
 Content-Type: application/json
 Authorization: {{AccessToken}}
+RefreshToken: {{RefreshToken}}
+
 
