@@ -18,7 +18,7 @@ export class TokenBlackListRepository extends Repository<TokenBlackList> {
     token: string,
     jti: string,
     tokenType: 'access' | 'refresh',
-    expiresAt: number,
+    expiresAt: Date,
   ): Promise<void> {
     console.log(expiresAt);
 
@@ -26,7 +26,7 @@ export class TokenBlackListRepository extends Repository<TokenBlackList> {
     blackListedToken.token = token;
     blackListedToken.jti = jti;
     blackListedToken.tokenType = tokenType;
-    blackListedToken.expiresAt = new Date(expiresAt * 1000);
+    blackListedToken.expiresAt = expiresAt;
     await this.repo.save(blackListedToken);
   }
 

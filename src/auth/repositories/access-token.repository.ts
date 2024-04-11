@@ -25,12 +25,20 @@ export class AccessTokenRepository extends Repository<AccessToken> {
     accessToken.jti = jti;
     accessToken.user = user;
     accessToken.token = token;
-    accessToken.expiredAt = expiresAt;
+    accessToken.expiresAt = expiresAt;
     accessToken.isRevoked = false;
     return this.repo.save(accessToken);
   }
 
   async findOneByJti(jti: string): Promise<AccessToken> {
     return this.findOneBy({ jti, isRevoked: false });
+  }
+
+  async changeStatusExpiredTokens(): Promise<void> {
+    await this.createQueryBuilder()
+      .update(AccessToken)
+      .set({ isRevoked: true })
+      .where('expiresAt < NOW()')
+      .execute();
   }
 }

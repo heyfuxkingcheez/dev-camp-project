@@ -7,7 +7,6 @@ import { ConfigService } from '@nestjs/config';
 import {
   AccessLogRepository,
   AccessTokenRepository,
-  TokenBlackListRepository,
   UserRepository,
 } from '../repositories';
 import { LoginResDto } from '../dto';
@@ -17,6 +16,7 @@ import { RequestInfo, TokenPayload } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenRepository } from './../repositories/refresh-token.repository';
+import { TokenBlackListService } from './token_blackList.service';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +27,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly accessTokenRepository: AccessTokenRepository,
     private readonly refreshTokenRepository: RefreshTokenRepository,
-    private readonly tokenBlackListRepository: TokenBlackListRepository,
+    private readonly tokenBlackListService: TokenBlackListService,
   ) {}
 
   async login(
@@ -36,6 +36,8 @@ export class AuthService {
     req: RequestInfo,
   ): Promise<LoginResDto> {
     const user = await this.validateUser(email, plainPassword);
+    await this.invalidateTokens(user.id);
+
     const payload: TokenPayload = this.createTokenPayload(user.id);
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -69,13 +71,13 @@ export class AuthService {
 
     // console.log(access, refresh);
     await Promise.all([
-      this.tokenBlackListRepository.addTokenToBlackList(
+      this.tokenBlackListService.addToBlacklist(
         accessToken,
         access.jti,
         'access',
         access.exp,
       ),
-      this.tokenBlackListRepository.addTokenToBlackList(
+      this.tokenBlackListService.addToBlacklist(
         refreshToken,
         refresh.jti,
         'refresh',
@@ -110,12 +112,6 @@ export class AuthService {
       );
     }
     return user;
-  }
-
-  async isTokenBlackListed(jti: string): Promise<boolean> {
-    const token = await this.tokenBlackListRepository.isTokenBlackListed(jti);
-    if (!token) return false;
-    return true;
   }
 
   createTokenPayload(userId: string): TokenPayload {
@@ -154,6 +150,42 @@ export class AuthService {
     );
 
     return token;
+  }
+
+  async invalidateTokens(userId: string): Promise<void> {
+    const now = new Date();
+    const [lastestAccessToken, lastestRefresToken] = await Promise.all([
+      this.accessTokenRepository
+        .createQueryBuilder('AccessToken')
+        .where('AccessToken.userId = :userId', { userId })
+        .andWhere('AccessToken.expiresAt > :now', { now })
+        .orderBy('AccessToken.expiresAt', 'DESC')
+        .getOne(),
+      this.refreshTokenRepository
+        .createQueryBuilder('RefreshToken')
+        .where('RefreshToken.userId = :userId', { userId })
+        .andWhere('RefreshToken.expiresAt > :now', { now })
+        .orderBy('RefreshToken.expiresAt', 'DESC')
+        .getOne(),
+    ]);
+
+    if (lastestAccessToken && lastestRefresToken) {
+      Promise.all([
+        this.tokenBlackListService.addToBlacklist(
+          lastestAccessToken.token,
+          lastestAccessToken.jti,
+          'access',
+          lastestAccessToken.expiresAt,
+        ),
+        this.tokenBlackListService.addToBlacklist(
+          lastestRefresToken.token,
+          lastestRefresToken.jti,
+          'refresh',
+          lastestRefresToken.expiresAt,
+        ),
+      ]);
+    }
+    return;
   }
 
   private calculateExpiry(expiry: string): Date {

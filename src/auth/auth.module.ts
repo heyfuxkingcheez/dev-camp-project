@@ -5,7 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { UserService } from './services';
+import { TokenBlackListService, UserService } from './services';
 import { UserRepository } from './repositories/user.repository';
 import { PassportModule } from '@nestjs/passport';
 import {
@@ -52,6 +52,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
   providers: [
     AuthService,
     UserService,
+    TokenBlackListService,
 
     UserRepository,
     AccessLogRepository,
@@ -68,6 +69,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
   exports: [
     AuthService,
     UserService,
+    TokenBlackListService,
 
     UserRepository,
     AccessLogRepository,

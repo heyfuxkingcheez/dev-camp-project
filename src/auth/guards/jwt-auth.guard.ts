@@ -2,8 +2,7 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-
-import { AuthService } from '../services';
+import { TokenBlackListService } from '../services';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -11,7 +10,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private reflector: Reflector,
     private configService: ConfigService,
-    private readonly authService: AuthService,
+    private readonly tokenBlackListService: TokenBlackListService,
     private readonly jwtService: JwtService,
   ) {
     super();
@@ -33,9 +32,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const payload = await this.jwtService.verifyAsync(token, {
       secret: this.configService.get<string>('JWT_SECRET'),
     });
-    const isTokenBlackListed = await this.authService.isTokenBlackListed(
-      payload.jti,
-    );
+    const isTokenBlackListed =
+      await this.tokenBlackListService.isTokenBlackListed(payload.jti);
     if (isTokenBlackListed) return false;
 
     return super.canActivate(context) as Promise<boolean>;

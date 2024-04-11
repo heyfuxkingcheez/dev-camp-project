@@ -28,4 +28,12 @@ export class RefreshTokenRepository extends Repository<RefreshToken> {
     refreshToken.isRevoked = false;
     return this.repo.save(refreshToken);
   }
+
+  async changeStatusExpiredTokens(): Promise<void> {
+    await this.createQueryBuilder()
+      .update(RefreshToken)
+      .set({ isRevoked: true })
+      .where('expiresAt < NOW()')
+      .execute();
+  }
 }

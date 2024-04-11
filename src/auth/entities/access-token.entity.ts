@@ -14,7 +14,7 @@ export class AccessToken extends BaseEntity {
   token: string;
 
   @Column({ type: 'timestamp' })
-  expiredAt: Date;
+  expiresAt: Date;
 
   @Column({ default: false })
   isRevoked: boolean;
